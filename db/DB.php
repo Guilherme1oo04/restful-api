@@ -9,6 +9,7 @@ class DB
 	private function __construct(PDO $connection)
 	{
 		$this->connection = $connection;
+		$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 
 	public static function connect(string $host, string $dbName, string $user, string $password)
@@ -26,8 +27,35 @@ class DB
 		return new self($connection);
 	}
 
-	public function getConnection()
+	public function createTables(): bool
 	{
-		return $this->connection;
+		$stringPath = __DIR__ . '/../config/migrations/tables.sql';
+		$sqlTablesPath = realpath($stringPath);
+
+		if(!file_exists($sqlTablesPath))
+		{
+			writeLog("File not found: $stringPath");
+			return false;
+		}
+
+		$sqlTables = file_get_contents($sqlTablesPath);
+
+		if($this->connection === null)
+		{
+			writeLog("PDO Connection is invalid");
+			return false;
+		}
+
+		try
+		{
+			$this->connection->exec($sqlTables);
+		}
+		catch(PDOException $e)
+		{
+			writeLog("Error creating tables: " . $e->getMessage());
+			return false;
+		}
+
+		return true;
 	}
 }
