@@ -1,9 +1,12 @@
 <?php
 
-function writeLog(string $message): void
+class Log
 {
-	$date = date('Y-m-d H:i:s');
-	$message = "$date - $message\n";
+	static function write(string $message): void
+	{
+		$date = date('Y-m-d H:i:s');
+		$message = "$date - $message\n";
 
-	file_put_contents(__DIR__ . '/../logs/error.log', $message, FILE_APPEND);
+		file_put_contents(__DIR__ . '/../logs/error.log', $message, FILE_APPEND);
+	}
 }
