@@ -34,3 +34,20 @@ $db = DB::connect(
 );
 
 $admin_created = User::createAdmin($db, $argv[1], $argv[2]);
+
+if($admin_created)
+{
+	print_r("\n");
+	print_r('Usuário criado com sucesso');
+	print_r("\n");
+	print_r("\n");
+	exit;
+}
+else
+{
+	print_r("\n");
+	print_r('Erro ao criar usuário');
+	print_r("\n");
+	print_r("\n");
+	exit;
+}
