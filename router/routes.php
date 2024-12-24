@@ -1,7 +1,11 @@
 <?php
 
 include __DIR__ . '/../classes/Route.php';
+include __DIR__ . '/../classes/RouteGroup.php';
 
 $routes = [
-	'/teste' => new Route('/teste', 'GET')
+	'/users' => new RouteGroup('/users', [
+		new Route('/', 'GET', 'user/GetUsers', 'GetUsers'),
+		// new Route('/{id}', 'GET', ),
+	])
 ];
