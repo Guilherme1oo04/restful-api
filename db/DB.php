@@ -62,18 +62,107 @@ class DB
 		return true;
 	}
 
-	public function insert(string $table, array $data): bool
+	/**
+	 * Retorna um array contendo os dados das colunas de uma tabela especificada e o status indicando o sucesso ou falha da operação
+	 * @param string $table Nome da tabela
+	 * @param array $columns Array contendo os nomes das colunas
+	 * @param array $conditions Array contendo as condições das colunas, cada condição contém um array contendo:
+	 * 		"column" => string,
+	 * 		"value" => string,
+	 * 		"operator" => string
+	 * @return array
+	 * 		"status" => bool,
+	 * 		"data" => array
+	 */
+	public function select(string $table, array $columns, array $conditions): array
+	{
+		if($this->connection === null)
+		{
+			Log::write("Error selecting data: PDO Connection is invalid");
+			return [
+				"status" => false,
+				"data" => []
+			];
+		}
+
+		if(empty($columns))
+		{
+			Log::write("Error selecting data: Columns are empty");
+			return [
+				"status" => false,
+				"data" => []
+			];
+		}
+
+		$this->connection->beginTransaction();
+
+		try
+		{
+			$columnsString = implode(", ", $columns);
+			$query = "SELECT $columnsString FROM $table";
+
+			if(!empty($conditions))
+			{
+				$query .= " WHERE ";
+				$firstCondition = $conditions[0];
+				$query .= $firstCondition["column"] . " " . $firstCondition["operator"] . " '" . $firstCondition["value"] . "'";
+
+				$conditionsLength = count($conditions);
+				for($i = 1; $i < $conditionsLength; $i++)
+				{
+					$query .= " AND " . $conditions[$i]["column"] . " " . $conditions[$i]["operator"] . " '" . $conditions[$i]["value"] . "'";
+				}
+			}
+
+			$statement = $this->connection->prepare($query);
+			$statement->execute();
+
+			$data = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+			$this->connection->commit();
+
+			return [
+				"status" => true,
+				"data" => $data
+			];
+		}
+		catch(PDOException $e)
+		{
+			$this->connection->rollBack();
+			Log::write("Error selecting data: " . $e->getMessage());
+			return [
+				"status" => false,
+				"data" => []
+			];
+		}
+	}
+
+	/**
+	 * Insere dados na tabela especificada e retorna a chave primária do registro inserido e o status indicando o sucesso ou falha da operação
+	 * @param string $table Nome da tabela
+	 * @param array $data Array contendo os dados a serem inseridos
+	 * @return array
+	 * 		"status" => bool,
+	 * 		"id" => int
+	 */
+	public function insert(string $table, array $data): array
 	{
 		if($this->connection === null)
 		{
 			Log::write("Error inserting data: PDO Connection is invalid");
-			return false;
+			return [
+				"status" => false,
+				"id" => null
+			];
 		}
 
 		if(empty($data))
 		{
 			Log::write("Error inserting data: Data is empty");
-			return false;
+			return [
+				"status" => false,
+				"id" => null
+			];
 		}
 
 		$this->connection->beginTransaction();
@@ -92,15 +181,23 @@ class DB
 
 			$statement->execute(array_values($data));
 
+			$id = $this->connection->lastInsertId();
+
 			$this->connection->commit();
+
+			return [
+				"status" => true,
+				"id" => $id
+			];
 		}
 		catch(PDOException $e)
 		{
 			$this->connection->rollBack();
 			Log::write("Error inserting data: " . $e->getMessage());
-			return false;
+			return [
+				"status" => false,
+				"id" => null
+			];
 		}
-
-		return true;
 	}
 }
