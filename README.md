@@ -11,5 +11,5 @@ php .\config\factories\create_admin_user.php "adm-123" "senha123"
 # Init server
 ```bash
 cd init
-php -S locahost:8000
+php -S localhost:8000
 ```
