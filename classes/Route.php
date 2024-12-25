@@ -2,7 +2,7 @@
 
 class Route
 {
-	protected string $url;
+	protected string $path;
 	protected string $method;
 	protected string $controllerPath;
 	protected string $controllerName;
@@ -10,9 +10,9 @@ class Route
 
 	private const CONTROLLERS_DIR = __DIR__ . '/../controllers/';
 
-	public function __construct(string $url, string $method, string $controllerPath, $controllerName, string $contentType = 'application/json')
+	public function __construct(string $path, string $method, string $controllerPath, $controllerName, string $contentType = 'application/json')
 	{
-		$this->url = $url;
+		$this->path = $path;
 		$this->method = $method;
 		$this->controllerPath = $controllerPath;
 		$this->controllerName = $controllerName;
@@ -29,8 +29,8 @@ class Route
 		return $this->method;
 	}
 
-	public function getUrl(): string
+	public function getPath(): string
 	{
-		return $this->url;
+		return $this->path;
 	}
 }
