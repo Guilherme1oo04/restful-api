@@ -11,7 +11,7 @@ class RouteGroup
 		$this->routes = $routes;
 	}
 
-	public function getRoute(string $url, string $method): ?Route
+	public function getRoute(string $path): Route | RouteGroup | null
 	{
 		if(empty($this->routes))
 		{
@@ -20,11 +20,30 @@ class RouteGroup
 
 		foreach($this->routes as $route)
 		{
-			if($route->getUrl() === $url && $route->getMethod() === $method)
+			if($route instanceof RouteGroup)
 			{
-				return $route;
-				break;
+				if($route->getPrefix() == $path)
+				{
+					return $route;
+					break;
+				}
+			}
+
+			if($route instanceof Route)
+			{
+				if($route->getPath() == $path)
+				{
+					return $route;
+					break;
+				}
 			}
 		}
+
+		return null;
+	}
+
+	public function getPrefix(): string
+	{
+		return $this->prefix;
 	}
 }
