@@ -11,11 +11,13 @@ class RouteGroup
 		$this->routes = $routes;
 	}
 
-	public function getRoute(string $path): Route | RouteGroup | null
+	public function getRoute(string $path, string $requestMethod): Route | RouteGroup | null
 	{
+		$routeSelected = null;
+
 		if(empty($this->routes))
 		{
-			return null;
+			return $routeSelected;
 		}
 
 		foreach($this->routes as $route)
@@ -24,22 +26,31 @@ class RouteGroup
 			{
 				if($route->getPrefix() == $path)
 				{
-					return $route;
+					$routeSelected = $route;
 					break;
 				}
 			}
 
 			if($route instanceof Route)
 			{
-				if($route->getPath() == $path)
+				if($route->getMethod() == $requestMethod)
 				{
-					return $route;
-					break;
+					if(preg_match('/^\/\{\w+\}$/', $route->getPath()) && $routeSelected === null)
+					{
+						$route->setUrlParameter($path);
+						$routeSelected = $route;
+					}
+
+					if($route->getPath() == $path)
+					{
+						$route->setUrlParameter(null);
+						$routeSelected = $route;
+					}
 				}
 			}
 		}
 
-		return null;
+		return $routeSelected;
 	}
 
 	public function getPrefix(): string
