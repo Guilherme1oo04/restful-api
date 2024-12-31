@@ -1,8 +1,9 @@
 <?php
 
-include __DIR__ . '/../router/routes.php';
-include __DIR__ . '/../config/env.php';
-include __DIR__ . '/../db/DB.php';
+include_once __DIR__ . '/../router/routes.php';
+include_once __DIR__ . '/../config/env.php';
+include_once __DIR__ . '/../db/DB.php';
+include_once __DIR__ . '/../classes/Request.php';
 
 $path = explode('?', $_SERVER['REQUEST_URI'])[0] ?? '/';
 
@@ -21,6 +22,14 @@ $path = array_values(array_filter(
 		return $item !== '';
 	}
 ));
+
+$request = new Request(
+	getallheaders(),
+	$requestMethod,
+	$queryParams,
+	$requestDataBody,
+	null
+);
 
 $routeSelected = null;
 
@@ -44,13 +53,13 @@ if(!empty($path))
 				if(preg_match('/^\/\{\w+\}$/', $route->getPath()))
 				{
 					$routeSelected = $route;
-					$routeSelected->setUrlParameter($path[0]);
+					$request->setUrlParameter($path[0]);
 				}
 
 				if($route->getPath() === "/" . $path[0])
 				{
 					$routeSelected = $route;
-					$routeSelected->setUrlParameter(null);
+					$request->setUrlParameter(null);
 				}
 			}
 		}
@@ -76,7 +85,7 @@ else
 
 if($routeSelected !== null)
 {
-	$routeSelected = getSelectedRoute($routeSelected, array_slice($path, 1), $requestMethod);
+	$routeSelected = getSelectedRoute($routeSelected, array_slice($path, 1), $request);
 }
 
 if($routeSelected === null)
@@ -92,7 +101,13 @@ $db = DB::connect(
 	$_ENV['DB_PASSWORD']
 );
 
-$return = $routeSelected->getControllerData($db, $requestDataBody, $queryParams);
+$return = $routeSelected->getControllerData($db, $request);
+
+if($return['statusCode'] === 401)
+{
+	header("HTTP/1.0 401 Unauthorized");
+	exit;
+}
 
 if($routeSelected->getContentType() === 'application/json')
 {

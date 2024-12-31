@@ -1,10 +1,10 @@
 <?php
 
-include __DIR__ . '/../../classes/Models/User.php';
+include_once __DIR__ . '/../../classes/Models/User.php';
 
 class GetUsers
 {
-	public function __invoke(DB $db, array $queryParams): array
+	public function __invoke(DB $db, Request $request): array
 	{
 		$users = User::all($db);
 
