@@ -2,16 +2,26 @@
 
 class RouteGroup
 {
-	protected $prefix;
-	protected $routes;
+	protected string $prefix;
+	protected array $routes;
+	protected array $middlewares;
 
-	public function __construct(string $prefix, array $routes)
+	public function __construct(string $prefix, array $routes, array $middlewares = [])
 	{
 		$this->prefix = $prefix;
 		$this->routes = $routes;
+
+		if(!empty($middlewares))
+		{
+			$this->middlewares = array_unique($middlewares);
+		}
+		else
+		{
+			$this->middlewares = [];
+		}
 	}
 
-	public function getRoute(string $path, string $requestMethod): Route | RouteGroup | null
+	public function getRoute(string $path, Request $request): Route | RouteGroup | null
 	{
 		$routeSelected = null;
 
@@ -22,6 +32,12 @@ class RouteGroup
 
 		foreach($this->routes as $route)
 		{
+			if(!empty($this->getMiddlewares()))
+			{
+				$route->setMiddlewares($this->getMiddlewares());
+				Log::write("path; " . $path);
+				Log::write("Middlewares: " . json_encode($route->getMiddlewares()));
+			}
 			if($route instanceof RouteGroup)
 			{
 				if($route->getPrefix() == $path)
@@ -33,17 +49,17 @@ class RouteGroup
 
 			if($route instanceof Route)
 			{
-				if($route->getMethod() == $requestMethod)
+				if($route->getMethod() == $request->getMethod())
 				{
 					if(preg_match('/^\/\{\w+\}$/', $route->getPath()) && $routeSelected === null)
 					{
-						$route->setUrlParameter($path);
+						$request->setUrlParameter($path);
 						$routeSelected = $route;
 					}
 
 					if($route->getPath() == $path)
 					{
-						$route->setUrlParameter(null);
+						$request->setUrlParameter(null);
 						$routeSelected = $route;
 					}
 				}
@@ -56,5 +72,16 @@ class RouteGroup
 	public function getPrefix(): string
 	{
 		return $this->prefix;
+	}
+
+	public function getMiddlewares(): array
+	{
+		return $this->middlewares;
+	}
+
+	public function setMiddlewares(array $middlewares): void
+	{
+		$this->middlewares = array_merge($this->middlewares, $middlewares);
+		$this->middlewares = array_unique($this->middlewares);
 	}
 }

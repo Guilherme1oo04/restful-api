@@ -7,18 +7,26 @@ class Route
 	protected string $controllerPath;
 	protected string $controllerName;
 	protected string $contentType;
-	protected string | null $urlParameter;
+	protected array $middlewares;
 
 	private const CONTROLLERS_DIR = __DIR__ . '/../controllers/';
 
-	public function __construct(string $path, string $method, string $controllerPath, $controllerName, string $contentType = 'application/json', string $urlParameter = null)
+	public function __construct(string $path, string $method, string $controllerPath, $controllerName, string $contentType = 'application/json', array $middlewares = [])
 	{
 		$this->path = $path;
 		$this->method = $method;
 		$this->controllerPath = $controllerPath;
 		$this->controllerName = $controllerName;
 		$this->contentType = $contentType;
-		$this->urlParameter = $urlParameter;
+
+		if(!empty($middlewares))
+		{
+			$this->middlewares = array_unique($middlewares);
+		}
+		else
+		{
+			$this->middlewares = [];
+		}
 	}
 
 	private function getControllerPath(): string
@@ -26,28 +34,38 @@ class Route
 		return realpath(self::CONTROLLERS_DIR . $this->controllerPath . '.php');
 	}
 
-	public function getControllerData(DB $db, array $requestData, array $queryParams): array
+	public function getControllerData(DB $db, Request $request): array
 	{
 		if(!file_exists($this->getControllerPath()))
 		{
-			return null;
+			return [
+				"statusCode" => 404,
+				"data" => []
+			];
 		}
 
-		require_once $this->getControllerPath();
+		if(!empty($this->middlewares))
+		{
+			foreach($this->middlewares as $middleware)
+			{
+				include_once __DIR__ . '/../middlewares/' . $middleware . '.php';
+				$validation = $middleware::handle($request, $db);
+
+				if(!$validation)
+				{
+					return [
+						"statusCode" => 401,
+						"data" => []
+					];
+				}
+			}
+		}
+
+		include_once $this->getControllerPath();
 
 		$class = new $this->controllerName();
 
-		if($this->method === 'GET' || $this->method === 'DELETE')
-		{
-			return $class($db, $queryParams);
-		}
-
-		if($this->method === 'POST')
-		{
-			return $class($db, $requestData);
-		}
-
-		return $class($db, $requestData, $queryParams);
+		return $class($db, $request);
 	}
 
 	public function getMethod(): string
@@ -65,13 +83,14 @@ class Route
 		return $this->contentType;
 	}
 
-	public function getUrlParameter(): string | null
+	public function getMiddlewares(): array
 	{
-		return $this->urlParameter;
+		return $this->middlewares;
 	}
 
-	public function setUrlParameter(string | null $urlParameter): void
+	public function setMiddlewares(array $middlewares): void
 	{
-		$this->urlParameter = $urlParameter;
+		$this->middlewares = array_merge($this->middlewares, $middlewares);
+		$this->middlewares = array_unique($this->middlewares);
 	}
 }
