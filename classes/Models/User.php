@@ -84,6 +84,28 @@ class User
 		return $usersFetch["data"];
 	}
 
+	public static function validateUser(DB $db, string $userName, string $password): bool
+	{
+		$userFetch = $db->select(
+			User::TABLE_NAME,
+			["id"],
+			[
+				[
+					"column" => "user_name",
+					"value" => $userName,
+					"operator" => "="
+				],
+				[
+					"column" => "password",
+					"value" => hash("sha256", USER::HASH_KEY_PASSWORD . $password),
+					"operator" => "="
+				]
+			]
+		);
+
+		return !empty($userFetch["data"]);
+	}
+
 	public static function isAdmin(DB $db, int $userId): bool
 	{
 		$userFetch = $db->select(User::TABLE_NAME, ["user_id"], ["id" => $userId]);
