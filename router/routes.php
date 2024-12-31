@@ -1,18 +1,27 @@
 <?php
 
-include __DIR__ . '/../classes/Route.php';
-include __DIR__ . '/../classes/RouteGroup.php';
+include_once __DIR__ . '/../classes/Route.php';
+include_once __DIR__ . '/../classes/RouteGroup.php';
+include_once __DIR__ . '/../utils/Archive.php';
 
-function getSelectedRoute(Route | RouteGroup | null $route, array $path, string $requestMethod): Route | RouteGroup | null
+Archive::includeAll(
+	__DIR__ . '/../controllers',
+	'php',
+	[
+		'Middleware.php'
+	]
+);
+
+function getSelectedRoute(Route | RouteGroup | null $route, array $path, Request &$request): Route | RouteGroup | null
 {
 	if($route instanceof RouteGroup)
 	{
 		if(empty($path))
 		{
-			return getSelectedRoute($route->getRoute("/", $requestMethod), [], $requestMethod);
+			return getSelectedRoute($route->getRoute("/", $request), [], $request);
 		}
 
-		return getSelectedRoute($route->getRoute("/" . $path[0], $requestMethod), array_slice($path, 1), $requestMethod);
+		return getSelectedRoute($route->getRoute("/" . $path[0], $request), array_slice($path, 1), $request);
 	}
 
 	if(count($path) > 0)
@@ -29,6 +38,5 @@ $routes = [
 			new Route('/', 'GET', 'user/GetUsers', 'GetUsers'),
 			new Route('/{id}', 'GET', 'user/GetUserById', 'GetUserById'),
 		]),
-		new Route('/teste', 'GET', 'user/GetUsers', 'GetUsers'),
-	]),
+	], [AuthMiddleware::class]),
 ];
