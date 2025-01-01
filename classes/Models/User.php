@@ -84,6 +84,23 @@ class User
 		return $usersFetch["data"];
 	}
 
+	public static function exists(DB $db, int $id): bool
+	{
+		$userFetch = $db->select(
+			User::TABLE_NAME,
+			["id"],
+			[
+				[
+					"column" => "id",
+					"value" => $id,
+					"operator" => "="
+				]
+			]
+		);
+
+		return !empty($userFetch["data"]);
+	}
+
 	public static function validateUser(DB $db, string $userName, string $password): bool
 	{
 		$userFetch = $db->select(
@@ -162,5 +179,10 @@ class User
 			Log::write("Error creating admin: " . $e->getMessage());
 			return false;
 		}
+	}
+
+	public function getIsAdmin(): bool
+	{
+		return $this->isAdmin;
 	}
 }
