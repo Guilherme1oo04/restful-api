@@ -11,7 +11,7 @@ class Route
 
 	private const CONTROLLERS_DIR = __DIR__ . '/../controllers/';
 
-	public function __construct(string $path, string $method, string $controllerPath, $controllerName, string $contentType = 'application/json', array $middlewares = [])
+	public function __construct(string $path, string $method, string $controllerPath, string $controllerName, string $contentType = 'application/json', array $middlewares = [])
 	{
 		$this->path = $path;
 		$this->method = $method;
