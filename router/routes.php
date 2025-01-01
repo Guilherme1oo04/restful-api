@@ -38,5 +38,6 @@ $routes = [
 			new Route('/', 'GET', 'user/GetUsers', 'GetUsers'),
 			new Route('/{id}', 'GET', 'user/GetUserById', 'GetUserById'),
 		]),
-	], [AuthMiddleware::class]),
+	], [AuthApiMiddleware::class]),
+	new Route('/login', 'GET', 'auth/GetLoginPage', 'GetLoginPage', 'text/html'),
 ];
