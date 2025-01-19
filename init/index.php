@@ -4,6 +4,7 @@ include_once __DIR__ . '/../router/routes.php';
 include_once __DIR__ . '/../config/env.php';
 include_once __DIR__ . '/../db/DB.php';
 include_once __DIR__ . '/../classes/Request.php';
+include_once __DIR__ . '/../classes/View.php';
 
 $path = explode('?', $_SERVER['REQUEST_URI'])[0] ?? '/';
 
@@ -105,7 +106,8 @@ $return = $routeSelected->getControllerData($db, $request);
 
 if($return['statusCode'] === 401)
 {
-	header("HTTP/1.0 401 Unauthorized");
+	http_response_code($return['statusCode']);
+	header('Content-Type: application/json');
 	exit;
 }
 
@@ -118,7 +120,9 @@ if($routeSelected->getContentType() === 'application/json')
 else
 {
 	header('Content-Type: text/html');
-	echo $return['html'];
+	http_response_code($return['statusCode']);
+
+	View::render($return['viewName'], $return['data']);
 }
 
 exit;
