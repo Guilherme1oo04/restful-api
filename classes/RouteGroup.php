@@ -35,8 +35,6 @@ class RouteGroup
 			if(!empty($this->getMiddlewares()))
 			{
 				$route->setMiddlewares($this->getMiddlewares());
-				Log::write("path; " . $path);
-				Log::write("Middlewares: " . json_encode($route->getMiddlewares()));
 			}
 			if($route instanceof RouteGroup)
 			{
