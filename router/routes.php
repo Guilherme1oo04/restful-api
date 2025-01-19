@@ -39,5 +39,5 @@ $routes = [
 			new Route('/{id}', 'GET', 'user/GetUserById', 'GetUserById'),
 		]),
 	], [AuthApiMiddleware::class]),
-	new Route('/login', 'GET', 'auth/GetLoginPage', 'GetLoginPage', 'text/html'),
+	new Route('/login', 'GET', 'frontend/GetLoginPage', 'GetLoginPage', 'text/html'),
 ];
